@@ -1,10 +1,6 @@
 X_base_regresion = dataframe_regresion[["RainToday", "Sunshine"]]
 Y_base_regresion = dataframe_regresion["RainfallTomorrow"]
 
-# Dividir los datos en conjunto de entrenamiento y de prueba
-X_train_base, X_test_base, Y_train_base, Y_test_base = train_test_split(
-    X_base_regresion, Y_base_regresion, test_size=0.20, random_state=42
-)
 
 mod_base_regresion = LinearRegresion()
 
