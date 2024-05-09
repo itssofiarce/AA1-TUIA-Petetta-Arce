@@ -1,4 +1,0 @@
-balancear con smote
-reglog
-grafico roc
-metricas
