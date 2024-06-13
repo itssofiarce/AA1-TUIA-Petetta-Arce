@@ -13,7 +13,7 @@ with header:
     st.text(
         "Do you come from a land down under Where women glow and men plunder? Can't you hear, can't you hear the thunder? You better run, you better take cover"
     )
-    path = ".././weatherAUS.csv"
+    path = "./weatherAUS.csv"
     dataframe = pd.read_csv(path, usecols=range(1, 25))
     # df = pd.read_csv(file_path, sep=",", engine="python")
     # wheater_data = pd.read_csv("weatherAUS.csv")
