@@ -25,9 +25,22 @@ with header:
     st.write("### dataset Limpio Y normalizado")
     st.write(df_limpio.head())
 
-    distribuciones_llueve_o_no = pd.DataFrame(df_limpio['RainTomorrow'].value_counts())
+    distribuciones_llueve_o_no = pd.DataFrame(df_limpio["RainTomorrow"].value_counts())
     st.subheader("Distribucion - ¿Llovio o no?")
     st.bar_chart(distribuciones_llueve_o_no)
 
+
 with model_training:
+    columnas_numericas = list(
+        df_limpio.columns[:-1]
+    )  # acomodar esto asi no uso raintomorrow
     st.header("He just smiled and gave me a Vegemite sandwich")
+    features = [
+        st.slider(
+            columna,
+            df_limpio[columna].min(),  # esto o queda asi o se ajusta
+            df_limpio[columna].max(),  # asi no muestra valores normalizados
+            round(df_limpio[columna].mean(), 2),
+        )  # medio raro tener humedad negativa
+        for columna in columnas_numericas
+    ]
