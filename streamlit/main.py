@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
-import clean_igual
-from clean_igual import preprocessor
+import handlers.clean_igual as clean_igual
+from handlers.clean_igual import preprocessor
 
 header = st.container()
 dataset = st.container()
 features = st.container()
+model_training = st.container()
 
 with header:
     st.title("""I met a strange lady, she made me nervous""")
@@ -15,8 +16,7 @@ with header:
     )
     path = "./weatherAUS.csv"
     dataframe = pd.read_csv(path, usecols=range(1, 25))
-    # df = pd.read_csv(file_path, sep=",", engine="python")
-    # wheater_data = pd.read_csv("weatherAUS.csv")
+
     st.write("### dataset original")
     st.write(dataframe.head())
 
@@ -25,6 +25,9 @@ with header:
     st.write("### dataset Limpio Y normalizado")
     st.write(df_limpio.head())
 
+    distribuciones_llueve_o_no = pd.DataFrame(df_limpio['RainTomorrow'].value_counts())
+    st.subheader("Distribucion - ¿Llovio o no?")
+    st.bar_chart(distribuciones_llueve_o_no)
 
-with dataset:
+with model_training:
     st.header("He just smiled and gave me a Vegemite sandwich")

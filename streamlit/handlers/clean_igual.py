@@ -1,4 +1,3 @@
-# the cleanest i've been
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -375,6 +374,17 @@ class RLValDropper(BaseEstimator, TransformerMixin):
         X.dropna(subset=["RainTomorrow"], inplace=True)
         return X
 
+# DESCARTAR VARIABLES NO NUMERICAS Y ACOMODAR EL DATASET PARA ML OPS
+# SOLAMENTE ML-OPS
+cols = ['costa_este','WindGustDir_sin',	'WindGustDir_cos','WindDir9am_sin',	'WindDir9am_cos','WindDir3pm_sin','WindDir3pm_cos']
+class DescartarNoUsarMlOPS(BaseEstimator, TransformerMixin):
+    def fit(self, X,y=None):
+        return self
+    
+    def transform(self,X):
+        X = X.drop(cols, axis=1)
+        return X
+
 
 ## Pipeline
 
@@ -400,5 +410,6 @@ preprocessor = Pipeline(
         ("reset_index", ResetIndex()),
         ("treat_outliers", OutliersTreater()),
         ("standariza_values", Standarizer()),
+        ("Preparar_MLOPS", DescartarNoUsarMlOPS())
     ]
 )
