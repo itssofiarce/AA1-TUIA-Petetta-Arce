@@ -1,19 +1,47 @@
 # Puesta en producción del modelo de Regresión Lógistica con HiperParametros optimizados
 import streamlit as st
 import numpy as np
+import pandas as pd
 import datetime
-from crear_modelo_regresion import preprocessor
+from handlers.script_1 import preprocessor
+from joblib import load
 
 if "pred" not in st.session_state:
     st.session_state["pred"] = None
 
 @st.cache_resource(show_spinner="Loading model...")
 def load_model():
-    pipe = load('models/lluvia_regresion.joblib')
+    pipe = load('handlers/model/linealmodel.joblib')
 
     return pipe
 
 def make_prediction(pipe):
+    inputs = {
+        'MinTemp': st.session_state["MinTemp"],
+        'MaxTemp': st.session_state["MaxTemp"],
+        'Rainfall': st.session_state["Rainfall"],
+        'Evaporation': st.session_state["Evaporation"],
+        'Sunshine': st.session_state["Sunshine"],
+        'WindGustSpeed': st.session_state["WindGustSpeed"],
+        'WindSpeed9am': st.session_state["WindSpeed9am"],
+        'WindSpeed3pm': st.session_state["WindSpeed3pm"],
+        'Humidity9am': st.session_state["Humidity9am"],
+        'Humidity3pm': st.session_state["Humidity3pm"],
+        'Pressure9am': st.session_state["Pressure9am"],
+        'Pressure3pm': st.session_state["Pressure3pm"],
+        'Cloud9am': st.session_state["Cloud9am"],
+        'Cloud3pm': st.session_state["Cloud3pm"],
+        'Temp9am': st.session_state["Temp9am"],
+        'Temp3pm': st.session_state["Temp3pm"],
+        'Location': st.session_state["Location"],
+        'RainToday': st.session_state["RainToday"],
+        'WindGustDir': st.session_state["WindGustDir"],
+        'WindDir9am': st.session_state["WindDir9am"],
+        'WindDir3pm': st.session_state["WindDir3pm"],
+        'Date': st.session_state["date"],
+        'RainTomorrow': "",
+        'Unnamed: 0':""
+    }
 
     MinTemp = st.session_state["MinTemp"]
     MaxTemp = st.session_state["MaxTemp"]
@@ -31,19 +59,20 @@ def make_prediction(pipe):
     Cloud3pm = st.session_state["Cloud3pm"]
     Temp9am = st.session_state["Temp9am"]
     Temp3pm = st.session_state["Temp3pm"]
-    #Date = st.session_state["date"].strftime('%m/%d/%Y')
+   # Date = '2024-01-20' #st.session_state["date"].strftime('%m/%d/%Y')
     Location = st.session_state["Location"]
     RainToday = st.session_state["RainToday"]
     WindGustDir = st.session_state["WindGustDir"]
     WindDir9am = st.session_state["WindDir9am"]
     WindDir3pm = st.session_state["WindDir3pm"]
+    RainToday = st.session_state["RainToday"]
 
     X_pred = np.array([MinTemp, MaxTemp, Rainfall, Evaporation, Sunshine,
     WindGustSpeed, WindSpeed9am, WindSpeed3pm, Humidity9am, Humidity3pm, 
-    Pressure9am, Pressure3pm, Cloud9am, Cloud3pm,Temp9am, Temp3pm, Date, Location,RainToday,
+    Pressure9am, Pressure3pm, Cloud9am, Cloud3pm,Temp9am, Temp3pm,RainToday,
     WindGustDir,WindDir9am,WindDir3pm]).reshape(1,-1)
 
-    X_pred = preproccesor.fit_transform(X_pred)
+    #X_pred = preprocessor.fit_transform(pd.DataFrame(inputs, index=[0]))
 
     pred = pipe.predict(X_pred)
     pred = round(pred[0], 2)
@@ -74,7 +103,9 @@ if __name__ == "__main__":
             st.number_input("Min Temperature", value=0.0, min_value=-100.0, step=0.1, key='MinTemp')
             st.number_input("Humidity at 9am", value=1.5, min_value=0.0, step=0.1, key='Humidity9am')
             st.number_input("Temperature at 9am", value=25.0, min_value=-23.0, step=0.1, key='Temp9am')
-            st.selectbox("Did it rain today?", index=0, options=["YES","NO"], key='RainToday')
+            raintoday_option_mapping = {'Sí': 1, 'No': 0}
+            raintoday_option = st.selectbox('¿Hoy llovió?',list(raintoday_option_mapping.keys()), key='RainToday')
+            
 
         with col3:
             st.number_input("Amount of rain fallen", value=0.0, min_value=0.0, step=0.1, key='Rainfall')

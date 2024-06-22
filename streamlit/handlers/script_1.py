@@ -8,6 +8,7 @@ from math import sqrt
 # De scikit-learn...
 
 # Pipeline
+from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder, StandardScaler,PowerTransformer
 
@@ -150,3 +151,19 @@ class BoolYNDropperEncoder(BaseEstimator, TransformerMixin):
       X['RainToday'] = X['RainToday'].map({'No': 0, 'Yes': 1}).astype(float)
 
       return X
+
+
+
+preprocessor = Pipeline([
+     ('drop_null_val_rl', RLValDropper()),
+     ('drop_not_needed_features', ColDropper()),
+     ('drop_nor_needed_locations',LocDropper()),
+     ('yes_no_dropper_encoder', BoolYNDropperEncoder()),
+     ('fill_null_cat', CatFiller()),
+     ('fill_num_cat', NumFiller()),
+     ('encode_loc', LocEncoder()),
+     ('encode_wind_dir', CoordRecat()),
+     ('reset_index',ResetIndex()),
+     ('treat_outliers',OutliersTreater()),
+  #   ('standariza_values', Standarizer())
+])
