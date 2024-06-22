@@ -42,5 +42,7 @@ X_train, X_test, Y1_train, Y1_test, Y2_train, Y2_test = train_test_split(
 )
 
 #ej de uso
-
+path= 'streamlit/weatherAUS.csv'
+#path = '/content/drive/MyDrive/weatherAUS.csv'
+df = pd.read_csv(path, usecols=range(1,25))
 X_train, X_test, y_train_regresion, y_test_regresion, y_train_clasificacion, y_test_clasificacion = splitter(df)
