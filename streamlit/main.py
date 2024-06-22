@@ -22,8 +22,7 @@ features = st.container()
 model_training = st.container()
 
 with header:
-    st.title("""I met a strange lady, she made me nervous""")
-    st.subheader("She took me in and gave me breakfast")
+    st.title("""Prediccion de lluvia en Australia""")
     path = "./weatherAUS.csv"
     dataframe = pd.read_csv(path, usecols=range(1, 25))
     df_limpio = preprocessor.fit_transform(dataframe)
@@ -47,7 +46,7 @@ with model_training:
     columnas_numericas = list(
         df_limpio.columns[:-1]
     )  # acomodar esto asi no uso raintomorrow
-    st.header("He just smiled and gave me a Vegemite sandwich")
+    st.header("Ajusta los parametros para que el modelo prediga")
     features = [
         st.slider(
             columna,
@@ -66,3 +65,8 @@ datos = pd.DataFrame([all_features],
                                   columns=feature_names)
 
 pred_clas = pipeline_clas.predict(datos)
+
+resultado_clasificacion = 'Si' if pred_clas else 'NO'
+#resultado_regresion
+
+st.markdown(f'Mañana probablemente {resultado_clasificacion} llueva')
