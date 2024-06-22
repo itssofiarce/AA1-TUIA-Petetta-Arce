@@ -1,16 +1,46 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[4]:
+
+
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from math import sqrt
+
+# Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.pipeline import Pipeline
+# Estandarización y modelado
 from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+# Division de los datos
+from sklearn.model_selection import train_test_split
+# Normalización
+# Regresiones
+from sklearn.linear_model import LogisticRegression
+# ML metricas
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 
-class ColDropper(BaseEstimator, TransformerMixin): #esto no anda no se que onda
+# In[5]:
+
+
+df = pd.read_csv('weatherAUS.csv',usecols=range(1,25))
+
+
+# pipeline que limpia datos
+
+# In[6]:
+
+
+class ColDropper(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
-        return X.drop(["Unnamed: 0", "Date", "RainTomorrow", "RainfallTomorrow"], axis=1)
+        return X.drop(["Unnamed: 0", "Date"], axis=1)
 
 
 class LocDropper(BaseEstimator, TransformerMixin):
@@ -372,11 +402,12 @@ class RLValDropper(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X.dropna(subset=["RainTomorrow"], inplace=True)
+        X.dropna(subset=["RainfallTomorrow"], inplace=True)
         return X
 
 # DESCARTAR VARIABLES NO NUMERICAS Y ACOMODAR EL DATASET PARA ML OPS
 # SOLAMENTE ML-OPS
-cols = ['costa_este','WindGustDir_sin',	'WindGustDir_cos','WindDir9am_sin',	'WindDir9am_cos','WindDir3pm_sin','WindDir3pm_cos', 'RainfallTomorrow', 'RainTomorrow']
+cols = ['costa_este','WindGustDir_sin',	'WindGustDir_cos','WindDir9am_sin',	'WindDir9am_cos','WindDir3pm_sin','WindDir3pm_cos']
 class DescartarNoUsarMlOPS(BaseEstimator, TransformerMixin):
     def fit(self, X,y=None):
         return self
@@ -413,3 +444,197 @@ preprocessor = Pipeline(
         ("Preparar_MLOPS", DescartarNoUsarMlOPS())
     ]
 )
+
+
+# split
+
+# In[7]:
+
+
+# Separación de variables explicativas y variables objetivo
+X = df.drop(['RainTomorrow', ], axis=1).copy()
+y = df[['RainTomorrow']].copy()
+
+# Spliteo mi dataset en train-test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train.shape, X_test.shape, y_train.shape, y_test.shape
+
+
+# In[8]:
+
+
+# Creo un Dataframe de TRAIN
+df_train = pd.DataFrame(X_train, columns=X.columns)
+df_train['RainTomorrow'] = y['RainTomorrow']
+
+
+# In[9]:
+
+
+# Creo un Dataframe de TEST
+df_test = pd.DataFrame(X_test, columns=X.columns)
+df_test['RainTomorrow'] = y['RainTomorrow']
+
+
+# In[10]:
+
+
+#Preproceso mi df de test y mi df de train
+df_train = preprocessor.fit_transform(df_train)
+df_test = preprocessor.fit_transform(df_test)
+
+
+# In[11]:
+
+
+# def clean_train(traindf):
+#     df_train = preprocessor.fit_transform(traindf)
+
+#     return df_train
+
+
+# In[12]:
+
+
+# def clean_test(testdf):
+#     df_test = preprocessor.transform(testdf)
+
+#     return df_test
+
+
+# In[13]:
+
+
+# df_train = clean_train(df_train)
+
+
+# In[14]:
+
+
+# df_test = clean_train(df_test)
+
+
+# In[15]:
+
+
+X_train_clasificacion = df_train.drop(['RainTomorrow', 'RainfallTomorrow'], axis=1).copy()
+y_train_clasificacion = df_train['RainTomorrow'].copy()
+
+X_test_clasificacion = df_test.drop(['RainTomorrow','RainfallTomorrow'], axis=1).copy()
+y_test_clasificacion = df_test['RainTomorrow'].copy()
+
+
+# In[16]:
+
+
+X_train_regresion = df_train.drop(['RainTomorrow','RainfallTomorrow'], axis=1).copy()
+y_train_regresion = df_train['RainfallTomorrow'].copy()
+
+X_test_regresion = df_test.drop(['RainTomorrow','RainfallTomorrow'], axis=1).copy()
+y_test_regresion = df_test['RainfallTomorrow'].copy()
+
+
+# In[17]:
+
+
+X_test_clasificacion
+
+
+# In[18]:
+
+
+class RegLogistica(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        self.parametros = {
+            "C": 10,
+            "class_weight": "balanced",
+            "max_iter": 500,
+            "solver": "newton-cg",
+        }
+        self.pipeline = None
+        self.model = None
+        self.y_pred_clasificacion = None
+
+    def fit(self, X, y):
+        if self.parametros:
+            self.model = LogisticRegression(**self.parametros)
+            self.model.fit(X_train_clasificacion, y_train_clasificacion)
+        else:
+            raise ValueError("Se necesita pasarle parametros al modelo")
+
+        return self
+
+    def predict(self, X):
+        if self.model:
+            y_pred_clasificacion = self.model.predict(X_test_clasificacion)
+            return y_pred_clasificacion
+        else:
+            raise ValueError("hubo un error entrenando el modelo")
+
+    def metrics(self, y_test_clasificacion):
+        if y_test_clasificacion is None:
+            raise ValueError("Se necesita el set de prueba")
+        
+        if self.y_pred_clasificacion is None:
+            raise ValueError("Se necesita predecir")
+
+        accuracy = accuracy_score(y_test_clasificacion, self.y_pred_clasificacion)
+        precision = precision_score(y_test_clasificacion, self.y_pred_clasificacion)
+        recall = recall_score(y_test_clasificacion, self.y_pred_clasificacion)
+        f1 = f1_score(y_test_clasificacion, self.y_pred_clasificacion)
+
+        metrics = {
+            "Accuracy": accuracy,
+            "Precision": precision,
+            "Recall": recall,
+            "F1 Score": f1,
+        }
+
+        return metrics
+
+
+# In[19]:
+
+
+reg_logistica = RegLogistica()
+
+# Crear el pipeline completo
+classification_pipeline = Pipeline([
+
+    ('classification_pipeline', reg_logistica)
+])
+
+classification_pipeline
+
+
+# In[20]:
+
+
+# Entrenar el pipeline con los datos de entrenamiento
+classification_pipeline.fit(X_train, y_train)
+
+# Hacer predicciones en los datos de prueba
+y_pred_class = classification_pipeline.predict(X_train_clasificacion)
+
+
+
+# In[21]:
+
+
+from sklearn.metrics import recall_score, accuracy_score, precision_score
+print(f"Recall: {recall_score(y_test_clasificacion, y_pred_class)}")
+print(f"Precision: {precision_score(y_test_clasificacion, y_pred_class)}")
+print(f"Accuracy: {accuracy_score(y_test_clasificacion, y_pred_class)}")
+
+
+# In[22]:
+
+
+import joblib
+
+
+# In[23]:
+
+
+joblib.dump(classification_pipeline, 'joblib/rain_pred_clasificacion.joblib')
+

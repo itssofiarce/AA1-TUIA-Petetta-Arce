@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from clean_igual import preprocessor
+from streamlit.handlers.clean_igual import preprocessor
 
 df = pd.read_csv("streamlit/handlers/weatherAUS.csv")
 

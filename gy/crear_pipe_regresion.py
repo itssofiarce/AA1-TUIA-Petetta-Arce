@@ -1,6 +1,6 @@
 import joblib
 from sklearn.pipeline import Pipeline
-from clean_igual import preprocessor
+from streamlit.handlers.clean_igual import preprocessor
 from red_regresion import regresion_pipeline
 from split_data import X_train, X_test, y_train_regresion, y_test_regresion
 

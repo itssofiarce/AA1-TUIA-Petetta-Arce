@@ -1,16 +1,18 @@
 import pandas as pd
 import numpy as np
+
+# Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import PowerTransformer
 
 
-class ColDropper(BaseEstimator, TransformerMixin): #esto no anda no se que onda
+class ColDropper(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
-        return X.drop(["Unnamed: 0", "Date", "RainTomorrow", "RainfallTomorrow"], axis=1)
+        return X.drop(["Unnamed: 0", "Date", "RainTomorrow"], axis=1)
 
 
 class LocDropper(BaseEstimator, TransformerMixin):
@@ -290,14 +292,6 @@ class LocEncoder(BaseEstimator, TransformerMixin):
         return X
 
 
-class ResetIndex(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        return X.reset_index(drop=True)
-
-
 class BoolYNDropperEncoder(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
@@ -373,43 +367,3 @@ class RLValDropper(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X.dropna(subset=["RainTomorrow"], inplace=True)
         return X
-
-# DESCARTAR VARIABLES NO NUMERICAS Y ACOMODAR EL DATASET PARA ML OPS
-# SOLAMENTE ML-OPS
-cols = ['costa_este','WindGustDir_sin',	'WindGustDir_cos','WindDir9am_sin',	'WindDir9am_cos','WindDir3pm_sin','WindDir3pm_cos', 'RainfallTomorrow', 'RainTomorrow']
-class DescartarNoUsarMlOPS(BaseEstimator, TransformerMixin):
-    def fit(self, X,y=None):
-        return self
-    
-    def transform(self,X):
-        X = X.drop(cols, axis=1)
-        return X
-
-
-## Pipeline
-
-# * Descartar Unnamed y Date porque son features que no vamos a utilizar: **ColDropper** (Ademas droppear RainfallTomorrow para prevenir la fuga de datos)
-# * Descartar todas las location que no son necesarias: **LocDropper**
-# * Dropear nulos y Label Encoding para las variables yes/no: **BoolYNDropperEncoder**
-# * Imputar valores nulos en variables categoricas con la moda: **CatFiller**
-# * Imputar valores nulos en variables numericas con la media:  **NumFiller**
-# * One Hot Encoding para las location: **LocEncoder**
-# * Encoding en sin y cos para WinDir: **CoordRecat**
-# * Estandarizar valores: **Standarizer**
-
-preprocessor = Pipeline(
-    [
-        ("drop_null_val_rl", RLValDropper()),
-        ("drop_not_needed_features", ColDropper()),
-        ("drop_nor_needed_locations", LocDropper()),
-        ("yes_no_dropper_encoder", BoolYNDropperEncoder()),
-        ("fill_null_cat", CatFiller()),
-        ("fill_num_cat", NumFiller()),
-        ("encode_loc", LocEncoder()),
-        ("encode_wind_dir", CoordRecat()),
-        ("reset_index", ResetIndex()),
-        ("treat_outliers", OutliersTreater()),
-        ("standariza_values", Standarizer()),
-        ("Preparar_MLOPS", DescartarNoUsarMlOPS())
-    ]
-)

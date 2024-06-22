@@ -1,6 +1,6 @@
 import joblib
 from sklearn.pipeline import Pipeline
-from clean_igual import preprocessor
+from streamlit.handlers.clean_igual import preprocessor
 from reglogistica import RegLogistica
 from split_data import X_train, X_test, y_train_clasificacion, y_test_clasificacion
 
@@ -11,8 +11,6 @@ reg_logistica = RegLogistica()
 # ipeline
 clasificacion_pipeline = Pipeline(
     [
-        #splitter
-        #("Preprocesado de datos", preprocessor),
         ("Clasificacion con reg Logistica", reg_logistica),
     ]
 )
