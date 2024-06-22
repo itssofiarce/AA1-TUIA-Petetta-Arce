@@ -5,12 +5,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 
-class ColDropper(BaseEstimator, TransformerMixin):
+class ColDropper(BaseEstimator, TransformerMixin): #esto no anda no se que onda
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
-        return X.drop(["Unnamed: 0", "Date", "RainTomorrow"], axis=1)
+        return X.drop(["Unnamed: 0", "Date", "RainTomorrow", "RainfallTomorrow"], axis=1)
 
 
 class LocDropper(BaseEstimator, TransformerMixin):
@@ -376,7 +376,7 @@ class RLValDropper(BaseEstimator, TransformerMixin):
 
 # DESCARTAR VARIABLES NO NUMERICAS Y ACOMODAR EL DATASET PARA ML OPS
 # SOLAMENTE ML-OPS
-cols = ['costa_este','WindGustDir_sin',	'WindGustDir_cos','WindDir9am_sin',	'WindDir9am_cos','WindDir3pm_sin','WindDir3pm_cos']
+cols = ['costa_este','WindGustDir_sin',	'WindGustDir_cos','WindDir9am_sin',	'WindDir9am_cos','WindDir3pm_sin','WindDir3pm_cos', 'RainfallTomorrow', 'RainTomorrow']
 class DescartarNoUsarMlOPS(BaseEstimator, TransformerMixin):
     def fit(self, X,y=None):
         return self
