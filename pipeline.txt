@@ -1,0 +1,23 @@
+1 lee dataset
+
+|
+|
+|
+|
+|
+V
+Split (split_data.py)
+|
+|
+|
+|
+|
+V
+Limpieza (clean_igual.py)
+|                   |
+|                   |
+|                   |
+|                   |
+|                   V
+V                   Clasificacion (clasificacion_pipe.py)
+Regresion (red_regression.py)

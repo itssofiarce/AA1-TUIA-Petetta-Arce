@@ -29,6 +29,10 @@ with header:
     st.subheader("Distribucion - ¿Llovio o no?")
     st.bar_chart(distribuciones_llueve_o_no)
 
+    #######################################################
+    feature_names = pipeline_clas.named_steps['imputer']\
+                            .get_feature_names_out()
+
 
 with model_training:
     columnas_numericas = list(
@@ -44,3 +48,12 @@ with model_training:
         )  # medio raro tener humedad negativa
         for columna in columnas_numericas
     ]
+    raintoday_option_mapping = {'Sí': 1, 'No': 0}
+    raintoday_option = st.selectbox('¿Hoy llovió?',
+                                list(raintoday_option_mapping.keys()))
+
+all_features = features + [raintoday_option_mapping[raintoday_option]]
+datos = pd.DataFrame([all_features],
+                                  columns=feature_names)
+
+pred_clas = pipeline_clas.predict(datos)

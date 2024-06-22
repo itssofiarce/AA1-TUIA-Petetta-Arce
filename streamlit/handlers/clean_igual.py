@@ -410,6 +410,6 @@ preprocessor = Pipeline(
         ("reset_index", ResetIndex()),
         ("treat_outliers", OutliersTreater()),
         ("standariza_values", Standarizer()),
-        ("Preparar_MLOPS", DescartarNoUsarMlOPS())
+        #("Preparar_MLOPS", DescartarNoUsarMlOPS())
     ]
 )
