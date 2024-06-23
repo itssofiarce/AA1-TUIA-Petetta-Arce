@@ -43,7 +43,7 @@ with header:
 
 with model_training:
     columnas_numericas = list(df_limpio.columns[:-1])
-    st.header("He just smiled and gave me a Vegemite sandwich")
+    st.header("Ajusta los sliders y vas a recibir una prediccion")
     features = [
         st.slider(
             columna,
