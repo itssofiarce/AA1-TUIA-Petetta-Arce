@@ -1,10 +1,11 @@
-from pipeline import *
+from handlers.pipeline_clas import *
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 import joblib
 from sklearn.impute import SimpleImputer
+
 
 class ColDropper(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
@@ -376,14 +377,25 @@ class RLValDropper(BaseEstimator, TransformerMixin):
         X.dropna(subset=["RainfallTomorrow"], inplace=True)
         return X
 
+
 # DESCARTAR VARIABLES NO NUMERICAS Y ACOMODAR EL DATASET PARA ML OPS
 # SOLAMENTE ML-OPS
-cols = ['costa_este','WindGustDir_sin',	'WindGustDir_cos','WindDir9am_sin',	'WindDir9am_cos','WindDir3pm_sin','WindDir3pm_cos']
+cols = [
+    "costa_este",
+    "WindGustDir_sin",
+    "WindGustDir_cos",
+    "WindDir9am_sin",
+    "WindDir9am_cos",
+    "WindDir3pm_sin",
+    "WindDir3pm_cos",
+]
+
+
 class DescartarNoUsarMlOPS(BaseEstimator, TransformerMixin):
-    def fit(self, X,y=None):
+    def fit(self, X, y=None):
         return self
-    
-    def transform(self,X):
+
+    def transform(self, X):
         X = X.drop(cols, axis=1)
         return X
 
@@ -412,14 +424,14 @@ preprocessor = Pipeline(
         ("reset_index", ResetIndex()),
         ("treat_outliers", OutliersTreater()),
         ("standariza_values", Standarizer()),
-        ("Preparar_MLOPS", DescartarNoUsarMlOPS())
+        ("Preparar_MLOPS", DescartarNoUsarMlOPS()),
     ]
 )
 
 # Cargo dataset########################################################
 
 path = "streamlit/handlers/weatherAUS.csv"
-df = pd.read_csv(path, usecols=range(1,25))
+df = pd.read_csv(path, usecols=range(1, 25))
 df.head()
 
 
@@ -427,48 +439,53 @@ df.head()
 # df.dropna(subset=['RainfallTomorrow', 'RainTomorrow'], inplace=True)
 
 # Separación de variables explicativas y variables objetivo
-X = df.drop(['RainTomorrow', ], axis=1).copy()
-y = df[['RainTomorrow']].copy()
+X = df.drop(
+    [
+        "RainTomorrow",
+    ],
+    axis=1,
+).copy()
+y = df[["RainTomorrow"]].copy()
 
 # Spliteo mi dataset en train-test
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 X_train.shape, X_test.shape, y_train.shape, y_test.shape
 
 # Creo un Dataframe de TRAIN
 df_train = pd.DataFrame(X_train, columns=X.columns)
-df_train['RainTomorrow'] = y['RainTomorrow']
-
+df_train["RainTomorrow"] = y["RainTomorrow"]
 
 
 # Creo un Dataframe de TEST
 df_test = pd.DataFrame(X_test, columns=X.columns)
-df_test['RainTomorrow'] = y['RainTomorrow']
+df_test["RainTomorrow"] = y["RainTomorrow"]
 
 
-
-
-#Preproceso mi df de test y mi df de train
+# Preproceso mi df de test y mi df de train
 df_train = preprocessor.fit_transform(df_train)
 df_test = preprocessor.fit_transform(df_test)
 
 
+X_train = df_train.drop(["RainTomorrow", "RainfallTomorrow"], axis=1).copy()
+y_train = df_train["RainTomorrow"].copy()
 
-X_train = df_train.drop(['RainTomorrow', 'RainfallTomorrow'], axis=1).copy()
-y_train = df_train['RainTomorrow'].copy()
-
-X_test = df_test.drop(['RainTomorrow','RainfallTomorrow'], axis=1).copy()
-y_test = df_test['RainTomorrow'].copy()
-
-
-
+X_test = df_test.drop(["RainTomorrow", "RainfallTomorrow"], axis=1).copy()
+y_test = df_test["RainTomorrow"].copy()
 
 
 # Pipeline de modelo
 model = Pipeline(
     steps=[
-        ('imputer', SimpleImputer(strategy='mean')),
-        ('scaler',  StandardScaler()),
-        ("regressor", LogisticRegression(C=10, class_weight="balanced", max_iter=500, solver="newton-cg"))
+        ("imputer", SimpleImputer(strategy="mean")),
+        ("scaler", StandardScaler()),
+        (
+            "regressor",
+            LogisticRegression(
+                C=10, class_weight="balanced", max_iter=500, solver="newton-cg"
+            ),
+        ),
     ]
 )
 
@@ -482,12 +499,13 @@ y_pred_class = model.predict(X_test)
 
 # Métricas del modelo
 from sklearn.metrics import recall_score, accuracy_score, precision_score
+
 print(f"Recall: {recall_score(y_test, y_pred_class)}")
 print(f"Precision: {precision_score(y_test, y_pred_class)}")
 print(f"Accuracy: {accuracy_score(y_test, y_pred_class)}")
 
 # Guardo el modelo
-joblib.dump(model, 'streamlit/handlers/model/logisticmodel.joblib')
+joblib.dump(model, "streamlit/handlers/model/logisticmodel.joblib")
 
 
 # pipe_clas = Pipeline([
