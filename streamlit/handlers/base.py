@@ -2,9 +2,14 @@ from pipeline import *
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression,SGDRegressor
 import joblib
 from sklearn.impute import SimpleImputer
+from keras.layers import Dense, Dropout
+from keras.wrappers.scikit_learn import KerasRegressor
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.utils import to_categorical
+from keras.optimizers import Adam
 
 class ColDropper(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
@@ -415,13 +420,10 @@ preprocessor = Pipeline(
         ("Preparar_MLOPS", DescartarNoUsarMlOPS())
     ]
 )
-
 # Cargo dataset########################################################
 
 path = "streamlit/handlers/weatherAUS.csv"
 df = pd.read_csv(path, usecols=range(1,25))
-df.head()
-
 
 # # Dropeo valores nulos de 'RainfallTomorrow y Raintomorrow' de mi dataframe original
 # df.dropna(subset=['RainfallTomorrow', 'RainTomorrow'], inplace=True)
@@ -439,28 +441,20 @@ df_train = pd.DataFrame(X_train, columns=X.columns)
 df_train['RainTomorrow'] = y['RainTomorrow']
 
 
-
 # Creo un Dataframe de TEST
 df_test = pd.DataFrame(X_test, columns=X.columns)
 df_test['RainTomorrow'] = y['RainTomorrow']
-
-
 
 
 #Preproceso mi df de test y mi df de train
 df_train = preprocessor.fit_transform(df_train)
 df_test = preprocessor.fit_transform(df_test)
 
-
-
 X_train = df_train.drop(['RainTomorrow', 'RainfallTomorrow'], axis=1).copy()
 y_train = df_train['RainTomorrow'].copy()
 
 X_test = df_test.drop(['RainTomorrow','RainfallTomorrow'], axis=1).copy()
 y_test = df_test['RainTomorrow'].copy()
-
-
-
 
 
 # Pipeline de modelo
@@ -487,7 +481,7 @@ print(f"Precision: {precision_score(y_test, y_pred_class)}")
 print(f"Accuracy: {accuracy_score(y_test, y_pred_class)}")
 
 # Guardo el modelo
-joblib.dump(model, 'streamlit/handlers/model/logisticmodel.joblib')
+#joblib.dump(model, 'streamlit/handlers/model/logisticmodel.joblib')
 
 
 # pipe_clas = Pipeline([
@@ -499,3 +493,85 @@ joblib.dump(model, 'streamlit/handlers/model/logisticmodel.joblib')
 # pipe_clas.fit(X_train, y_train)
 
 # joblib.dump(pipe_clas, 'models/clasificacion_pipeline.joblib')
+
+##### ---- Modelo de Regresión Lineal --- #### 
+
+
+# Separación de variables explicativas y variables objetivo
+X = df.drop(['RainfallTomorrow', ], axis=1).copy()
+y = df[['RainfallTomorrow']].copy()
+
+# Spliteo mi dataset en train-test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train.shape, X_test.shape, y_train.shape, y_test.shape
+
+# DF train
+df_train = pd.DataFrame(X_train, columns=X.columns)
+df_train['RainfallTomorrow'] = y['RainfallTomorrow']
+
+# DF test
+df_test = pd.DataFrame(X_test, columns=X.columns)
+df_test['RainfallTomorrow'] = y['RainfallTomorrow']
+
+# Preproceso mi df de test y mi df de train
+df_train = preprocessor.fit_transform(df_train)
+df_test = preprocessor.fit_transform(df_test)
+
+X_train_regresion = df_train.drop(['RainfallTomorrow', 'RainTomorrow'], axis=1)
+y_train_regresion = df_train['RainfallTomorrow']
+
+X_test_regresion = df_test.drop(['RainfallTomorrow', 'RainTomorrow'], axis=1)
+y_test_regresion = df_test['RainfallTomorrow']
+
+best_params= {'num_layers': 3, 'n_units_input': 54, 'n_units_layer_0': 5, 'dropout_rate_layer_0': 0.05145265556334144, 
+              'n_units_layer_1': 75, 'dropout_rate_layer_1': 0.31260885803548927, 'n_units_layer_2': 110, 
+               'dropout_rate_layer_2': 0.33192966823747483, 'learning_rate': 0.0006470954272360495}
+
+def create_linear_model():  
+    best_model = Sequential()
+    best_model.add(Dense(best_params['n_units_input'], activation='relu', input_shape=(X_train_regresion.shape[1],)))
+
+
+    for i in range(best_params['num_layers']):
+        best_model.add(Dense(best_params[f'n_units_layer_{i}'], activation='relu'))
+        best_model.add(Dropout(best_params[f'dropout_rate_layer_{i}']))
+
+    best_model.add(Dense(1, activation='linear'))
+    
+    best_model.compile(optimizer=Adam(learning_rate=best_params['learning_rate']), loss='mean_squared_error')
+
+    return best_model
+
+nn = KerasRegressor(build_fn=create_linear_model,verbose=0,epochs=10, batch_size=64,)
+
+# Pipeline de modelo
+model_linear = Pipeline(
+    steps=[
+        ('imputer', SimpleImputer(strategy='mean')),
+        ('scaler',  StandardScaler()),
+        ("NeuralNetwork", nn)
+    ]
+)
+
+# Entrenamos el MEJOR modelo
+model_linear.fit(X_train_regresion, y_train_regresion)
+
+# Métricas del modelo
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Evaluamos el MEJOR modelo
+train_scores = model_linear.score(X_train_regresion, y_train_regresion, verbose=0)
+valid_scores = model_linear.score(X_test_regresion, y_test_regresion, verbose=0)
+
+train_r2 = r2_score(y_train_regresion, model_linear.predict(X_train_regresion))
+valid_r2 = r2_score(y_test_regresion, model_linear.predict(X_test_regresion))
+
+train_mse = mean_squared_error(y_train_regresion, model_linear.predict(X_train_regresion))
+valid_mse = mean_squared_error(y_test_regresion, model_linear.predict(X_test_regresion))
+
+# Chequeamos sus métricas
+print(f"Train R2: {train_r2}, Test R2: {valid_r2}")
+print(f"Train MSE: {train_mse}, Test MSE: {valid_mse}")
+
+# Guardo el modelo
+joblib.dump(model_linear, 'streamlit/handlers/model/linealmodel.joblib')
