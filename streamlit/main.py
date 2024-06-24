@@ -95,7 +95,6 @@ with header_lineal:
     feature_names = pipeline_reg.named_steps['imputer'].get_feature_names_out()
 ##################################################################3
 
-
 with model_training_lineal:
     columnas_numericas = list(
         df_limpio.columns[:-1]
@@ -103,16 +102,16 @@ with model_training_lineal:
     st.header("Ajusta los parametros para que el modelo prediga")
     features = [
         st.slider(
-            columna,
+            f"{columna}_{index}",
             df_limpio[columna].min(),  # esto o queda asi o se ajusta
             df_limpio[columna].max(),  # asi no muestra valores normalizados
             round(df_limpio[columna].mean(), 2),
         )  # medio raro tener humedad negativa
-        for columna in columnas_numericas
+        for index, columna in enumerate(columnas_numericas)
     ]
     raintoday_option_mapping = {'Sí': 1, 'No': 0}
     raintoday_option = st.selectbox('¿Hoy llovió?',
-                                list(raintoday_option_mapping.keys()))
+                                list(raintoday_option_mapping.keys()), key="Llovió")
 
 all_features = features + [raintoday_option_mapping[raintoday_option]]
 datos = pd.DataFrame([all_features],
@@ -120,5 +119,7 @@ datos = pd.DataFrame([all_features],
 
 pred_clas = pipeline_reg.predict(datos)
 #resultado_regresion
-
-st.markdown(f'Mañana probablemente llueva {pred_clas}cm3')
+if pred_clas > 0:
+    st.markdown(f'Mañana probablemente llueva {pred_clas[0]} cm3')
+else :
+    st.markdown(f'Mañana probablemente llueva 0 cm3')

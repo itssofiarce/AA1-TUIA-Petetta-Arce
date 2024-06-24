@@ -523,33 +523,13 @@ y_train_regresion = df_train['RainfallTomorrow']
 X_test_regresion = df_test.drop(['RainfallTomorrow', 'RainTomorrow'], axis=1)
 y_test_regresion = df_test['RainfallTomorrow']
 
-best_params= {'num_layers': 3, 'n_units_input': 54, 'n_units_layer_0': 5, 'dropout_rate_layer_0': 0.05145265556334144, 
-              'n_units_layer_1': 75, 'dropout_rate_layer_1': 0.31260885803548927, 'n_units_layer_2': 110, 
-               'dropout_rate_layer_2': 0.33192966823747483, 'learning_rate': 0.0006470954272360495}
-
-def create_linear_model():  
-    best_model = Sequential()
-    best_model.add(Dense(best_params['n_units_input'], activation='relu', input_shape=(X_train_regresion.shape[1],)))
-
-
-    for i in range(best_params['num_layers']):
-        best_model.add(Dense(best_params[f'n_units_layer_{i}'], activation='relu'))
-        best_model.add(Dropout(best_params[f'dropout_rate_layer_{i}']))
-
-    best_model.add(Dense(1, activation='linear'))
-    
-    best_model.compile(optimizer=Adam(learning_rate=best_params['learning_rate']), loss='mean_squared_error')
-
-    return best_model
-
-nn = KerasRegressor(build_fn=create_linear_model,verbose=0,epochs=10, batch_size=64,)
 
 # Pipeline de modelo
 model_linear = Pipeline(
     steps=[
         ('imputer', SimpleImputer(strategy='mean')),
         ('scaler',  StandardScaler()),
-        ("NeuralNetwork", nn)
+        ("regressor", SGDRegressor(max_iter=10000, random_state=42))
     ]
 )
 
