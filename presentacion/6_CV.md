@@ -1,2 +1,1 @@
-Aclarar por que funciona bien clasificacion con cross validation 
-Los folds tienen todos buen score
+La parte de realizar cross validation no hay mucho que comentar, lo mas destacable es que en 5 folds la performance se mantiene, tenemos un modelo bastante robusto, de nuestros modelos este resulta ser el mejor, incluso mejor que clasificar con redes neuronales
